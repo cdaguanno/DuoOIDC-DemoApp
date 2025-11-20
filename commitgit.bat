@@ -1,8 +1,10 @@
 @echo off
 cd /d "%~dp0"
 
+set /p ChangeDiscText="Enter Change Discription: "
+
 git add .
-git commit -m "Add environment-specific settings: base.py, local.py, production.py. Configure IDE to use local settings for development."
+git commit -m "%ChangeDiscText%"
 git push
 
 Pause
