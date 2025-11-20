@@ -19,7 +19,7 @@
     <WorkingDirectory>.</WorkingDirectory>
     <WebBrowserUrl>http://localhost</WebBrowserUrl>
     <LaunchProvider>Django launcher</LaunchProvider>
-    <DjangoSettingsModule>DuoOIDC_DemoApp.settings</DjangoSettingsModule>
+    <DjangoSettingsModule>DuoOIDC_DemoApp.settings.local</DjangoSettingsModule>
     <OutputPath>.</OutputPath>
     <SuppressCollectPythonCloudServiceFiles>true</SuppressCollectPythonCloudServiceFiles>
   </PropertyGroup>
@@ -38,9 +38,15 @@
     <Compile Include="app\views.py" />
     <Compile Include="app\__init__.py" />
     <Compile Include="app\migrations\__init__.py" />
+    <Compile Include="DuoOIDC_DemoApp\settings\base.py" />
+    <Compile Include="DuoOIDC_DemoApp\settings\production.py" />
+    <Compile Include="DuoOIDC_DemoApp\settings\local.py" />
+    <Compile Include="DuoOIDC_DemoApp\settings\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="manage.py" />
     <Compile Include="DuoOIDC_DemoApp\__init__.py" />
-    <Compile Include="DuoOIDC_DemoApp\settings.py" />
+    <Compile Include="DuoOIDC_DemoApp\settings.py.backup" />
     <Compile Include="DuoOIDC_DemoApp\urls.py" />
     <Compile Include="DuoOIDC_DemoApp\wsgi.py" />
   </ItemGroup>
@@ -55,8 +61,10 @@
     <Folder Include="app\templates\" />
     <Folder Include="app\templates\app\" />
     <Folder Include="DuoOIDC_DemoApp\" />
+    <Folder Include="DuoOIDC_DemoApp\settings\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include=".env.example" />
     <Content Include="requirements.txt" />
     <Content Include="db.sqlite3" />
     <Content Include="app\static\app\content\bootstrap.css" />
