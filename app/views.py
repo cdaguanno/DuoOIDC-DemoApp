@@ -56,7 +56,7 @@ def about(request):
     assert isinstance(request, HttpRequest)
     contacts = [
             {
-                'name': 'Roudy Devis',
+                'name': 'Roudy Devis - Team Leader',
                 'title': 'Security SE - GES East Strategic',
                 'email': 'rodevis@cisco.com',
                 'phone': '+1 212-714-4378',
