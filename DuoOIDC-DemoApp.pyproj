@@ -56,7 +56,7 @@
   <ItemGroup>
     <Folder Include="app\" />
     <Folder Include="app\migrations\" />
-    <Folder Include="app\images\" />
+    <Folder Include="app\static\app\images\" />
     <Folder Include="app\static\" />
     <Folder Include="app\static\app\" />
     <Folder Include="app\static\app\content\" />
@@ -69,6 +69,13 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".env.example" />
+    <Content Include="app\static\app\images\anders.jpg" />
+    <Content Include="app\static\app\images\arpan.jpg" />
+    <Content Include="app\static\app\images\download.jpg" />
+    <Content Include="app\static\app\images\Phil.jpg" />
+    <Content Include="app\static\app\images\roudy.jpg" />
+    <Content Include="app\static\app\images\shane.jpg" />
+    <Content Include="app\static\app\images\Steve.jpg" />
     <Content Include="requirements.txt" />
     <Content Include="db.sqlite3" />
     <Content Include="app\static\app\content\bootstrap.css" />

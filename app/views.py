@@ -54,12 +54,66 @@ def contact(request):
 def about(request):
     """Renders the about page."""
     assert isinstance(request, HttpRequest)
+    contacts = [
+            {
+                'name': 'Roudy Devis',
+                'title': 'Security SE - GES East Strategic',
+                'email': 'rodevis@cisco.com',
+                'phone': '+1 212-714-4378',
+                'picture': '/static/app/images/roudy.jpg',
+            },
+            {
+                'name': 'Anders Skjeveland',
+                'title': 'Security SE - GES East Strategic',
+                'email': 'askjevel@cisco.com',
+                'phone': '+1 610-695-5664',
+                'picture': '/static/app/images/anders.jpg',
+            },
+            {
+                'name': 'Arpan Lakra',
+                'title': 'Security SE - GES East Strategic',
+                'email': 'alakra@cisco.com',
+                'phone': '+1 703-484-0580',
+                'picture': '/static/app/images/arpan.jpg',
+            },
+            {
+                'name': 'Philip Jew',
+                'title': 'Security SE - GES East Strategic',
+                'email': 'pjew@cisco.com',
+                'phone': '+1 732-635-3730',
+                'picture': '/static/app/images/phil.jpg',
+            },
+            {
+                'name': 'Shane Joiner',
+                'title': 'Security SE - GES East Strategic',
+                'email': 'shjoiner@cisco.com',
+                'phone': '+1 904-996-1327',
+                'picture': '/static/app/images/shane.jpg',
+            },
+            {
+                'name': 'Steven Chimes',
+                'title': 'Security SE - GES East Strategic',
+                'email': 'schimes@cisco.com',
+                'phone': '+1 610-695-5678',
+                'picture': '/static/app/images/steve.jpg',
+            },
+            {
+                'name': "Chris D'Aguanno",
+                'title': 'Security SE - GES East Strategic',
+                'email': 'cdaguann@cisco.com',
+                'phone': '+1 631-806-1328',
+                'picture': '/static/app/images/download.jpg',
+            },
+        ]
+    
+
     return render(
         request,
         'app/about.html',
         {
-            'title':'About',
-            'message':'Your application description page.',
+            'title':'About Or Team',
+            'message':'The 765 Cisco Security SE team.',
+            'contacts': contacts,
             'year':datetime.now().year,
         }
     )

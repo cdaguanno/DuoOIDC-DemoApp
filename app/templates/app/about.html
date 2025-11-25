@@ -5,6 +5,25 @@
 <h2>{{ title }}.</h2>
 <h3>{{ message }}</h3>
 
-<p>Use this area to provide additional information.</p>
+<p>
+    Purpose:
+    The 765-AWS Control Center is an internal dashboard for monitoring and managing AWS EC2 instances across multiple regions (US East 1, US East 2, Canada Central 1). It provides the Cisco GES East Strategic team with centralized visibility into their cloud infrastructure and security resources.
+    Team:
+    The 765 SE team is Cisco's Global Enterprise Services (GES) East Strategic Account Security Solutions Engineering team. The team manages enterprise security implementations, architecture, and cloud infrastructure for key customers in the eastern region. Team members include:
+</p>
+
+{% for contact in contacts %}
+    <div style="display: flex; gap: 20px; margin-bottom: 40px;">
+        <div>
+            <img src="{{ contact.picture }}" alt="{{ contact.name }}" style="width: 200px; height: 200px; object-fit: cover;">
+        </div>
+        <div>
+            <h2>{{ contact.name }}</h2>
+            <p><strong>{{ contact.title }}</strong></p>
+            <p>{{ contact.email }}</p>
+            <p>{{ contact.phone }}</p>
+        </div>
+    </div>
+{% endfor %}
 
 {% endblock %}
