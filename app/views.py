@@ -81,7 +81,7 @@ def about(request):
                 'title': 'Security SE - GES East Strategic',
                 'email': 'pjew@cisco.com',
                 'phone': '+1 732-635-3730',
-                'picture': '/static/app/images/phil.jpg',
+                'picture': '/static/app/images/Phil.jpg',
             },
             {
                 'name': 'Shane Joiner',
@@ -95,7 +95,7 @@ def about(request):
                 'title': 'Security SE - GES East Strategic',
                 'email': 'schimes@cisco.com',
                 'phone': '+1 610-695-5678',
-                'picture': '/static/app/images/steve.jpg',
+                'picture': '/static/app/images/Steve.jpg',
             },
             {
                 'name': "Chris D'Aguanno",
