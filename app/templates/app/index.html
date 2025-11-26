@@ -5,7 +5,7 @@
 <div class="jumbotron">
     <h1>765 Lab Control Center</h1>
     <p class="lead">The 765 Lab Control Center is avaialble to help view Lab VMstatus and control EC2 Instance State.</p>
-    <p><a href="https://www.djangoproject.com/" class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+    <p><a href="" class="btn btn-primary btn-large">Place holder &raquo;</a></p>
 </div>
 
 
@@ -20,6 +20,7 @@
                     <th>Name</th>
                     <th>Type</th>
                     <th>State</th>
+                    <th>Connect</th>
                     <th>Availability Zone</th>
                 </tr>
             </thead>
@@ -34,11 +35,18 @@
                             {{ instance.State }}
                         </span>
                     </td>
+                    <td>
+                        {% if instance.CLconn != 'N/A' %}
+                        <a href="{{ instance.CLconn }}" target="_blank" rel="noopener noreferrer" class="btn btn-xs btn-primary">Open</a>
+                        {% else %}
+                        <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
                     <td>{{ instance.AvailabilityZone }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center text-muted">No instances found</td>
+                    <td colspan="6" class="text-center text-muted">No instances found</td>
                 </tr>
                 {% endfor %}
             </tbody>
