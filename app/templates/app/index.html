@@ -1,11 +1,22 @@
 {% extends "app/layout.html" %}
-
+{% load static %}
 {% block content %}
 
 <div class="jumbotron">
-    <h1>765 Lab Control Center</h1>
-    <p class="lead">The 765 Lab Control Center is avaialble to help view Lab VMstatus and control EC2 Instance State.</p>
-    <p><a href="" class="btn btn-primary btn-large">Place holder &raquo;</a></p>
+    <div class="row align-items-center">
+        <div class="col-md-3 text-center" style="margin-top: 40px;">
+            <img src="{% static 'app/images/Cisco_logo_blue_2016.svg.png' %}"
+                 class="img-fluid"
+                 alt="Cisco Security"
+                 style="max-width: 180px; height: auto;">
+            <p style="margin-top: 20px; font-size: 2rem;">Cisco Security</p>
+        </div>
+        <div class="col-md-9">
+            <h1>AWS Lab Control Center</h1>
+            <p class="lead">The Lab Control Center is available to help view Lab VM status and control EC2 Instance State.</p>
+            <p><a href="" class="btn btn-primary btn-lg">Placeholder &raquo;</a></p>
+        </div>
+    </div>
 </div>
 
 
@@ -20,7 +31,7 @@
                     <th>Name</th>
                     <th>Type</th>
                     <th>State</th>
-                    <th>Connect</th>
+                    <th>Admin Connect</th>
                     <th>Availability Zone</th>
                 </tr>
             </thead>
