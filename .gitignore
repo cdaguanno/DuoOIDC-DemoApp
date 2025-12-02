@@ -34,7 +34,6 @@ env/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-/media
 /staticfiles
 
 # Secrets & Environment
@@ -66,3 +65,8 @@ htmlcov/
 # Node (if using npm/webpack later)
 node_modules/
 npm-debug.log
+
+# Folder for downloads
+media/*
+!media/.gitkeep
+!media/downloads/.gitkeep

@@ -39,3 +39,7 @@ LOGGING['loggers']['django']['level'] = 'DEBUG'
 
 # Email configuration for local development (console output)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Media configuration for local development (console output)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

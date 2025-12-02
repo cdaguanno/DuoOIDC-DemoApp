@@ -66,6 +66,8 @@
     <Folder Include="app\templates\app\" />
     <Folder Include="DuoOIDC_DemoApp\" />
     <Folder Include="DuoOIDC_DemoApp\settings\" />
+    <Folder Include="media\" />
+    <Folder Include="media\downloads\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include=".env.example" />
@@ -76,6 +78,9 @@
     <Content Include="app\static\app\images\roudy.jpg" />
     <Content Include="app\static\app\images\shane.jpg" />
     <Content Include="app\static\app\images\Steve.jpg" />
+    <Content Include="app\templates\app\downloads.html" />
+    <Content Include="media\downloads\.gitkeep" />
+    <Content Include="media\downloads\AuthProxy-PEM.pem" />
     <Content Include="requirements.txt" />
     <Content Include="db.sqlite3" />
     <Content Include="app\static\app\content\bootstrap.css" />

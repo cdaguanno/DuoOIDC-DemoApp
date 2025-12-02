@@ -6,6 +6,8 @@ from datetime import datetime
 from django.shortcuts import render
 from django.http import HttpRequest
 from app import ec2instance
+import os
+from django.conf import settings
 
 def home(request):
     """Renders the home page."""
@@ -37,6 +39,35 @@ def home(request):
         }
     )
 
+
+def downloads(request):
+    """Renders the downloads page with file listing."""
+    assert isinstance(request, HttpRequest)
+    downloads_dir = os.path.join(settings.MEDIA_ROOT, 'downloads')
+   
+    files = []
+    if os.path.exists(downloads_dir):
+        for filename in os.listdir(downloads_dir):
+            if filename == '.gitkeep':  # Skip .gitkeep
+                continue
+            filepath = os.path.join(downloads_dir, filename)
+            if os.path.isfile(filepath):
+                files.append({
+                    'name': filename,
+                    'url': f'{settings.MEDIA_URL}downloads/{filename}',
+                    'size': os.path.getsize(filepath)
+                })
+
+    return render(
+        request,
+        'app/downloads.html',
+        {
+            'title':'Downloads',
+            'message':'Lab files download repository',
+            'files': files,
+            'year':datetime.now().year,
+        }
+    )
 
 def contact(request):
     """Renders the contact page."""

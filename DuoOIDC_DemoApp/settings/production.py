@@ -82,3 +82,7 @@ DUO_REDIRECT_URI = os.getenv('DUO_REDIRECT_URI', '')
 SESSION_COOKIE_AGE = 86400  # 24 hours
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
+
+# Media configuration for production
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
