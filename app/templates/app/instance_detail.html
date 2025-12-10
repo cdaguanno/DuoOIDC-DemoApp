@@ -32,10 +32,34 @@
             <dt>Availability Zone:</dt>
             <dd>{{ instance.AvailabilityZone }}</dd>
 
-            {% if instance.CLconn != 'N/A' %}
-            <dt>Admin Connect:</dt>
-            <dd><a href="{{ instance.CLconn }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">Open Connection</a></dd>
-            {% endif %}
+            <dt>Private IP:</dt>
+            <dd>{{ instance.PrivateIpAddress }}</dd>
+
+            <dt>Public IP:</dt>
+            <dd>{{ instance.PublicIpAddress }}</dd>
+
+            <dt>VPC ID:</dt>
+            <dd><code>{{ instance.VpcId }}</code></dd>
+
+            <dt>Subnet ID:</dt>
+            <dd><code>{{ instance.SubnetId }}</code></dd>
+
+            <dt>Launch Time:</dt>
+            <dd>{{ instance.LaunchTime|date:"Y-m-d H:i" }}</dd>
+
+            <dt>AMI ID:</dt>
+            <dd><code>{{ instance.ImageId }}</code></dd>
+
+            <dt>SSH Key:</dt>
+            <dd>{{ instance.KeyName }}</dd>
+
+            <dt>Security Groups:</dt>
+            <dd>{{ instance.SecurityGroups|join:", " }}</dd>
+
+            <dt>Platform:</dt>
+            <dd>{{ instance.Platform }}</dd>
+
+
         </dl>
     </div>
 </div>
@@ -45,8 +69,10 @@
         <h3 class="panel-title">Instance Management</h3>
     </div>
     <div class="panel-body">
-        <p>Instance management actions will be added here.</p>
-        <!-- Future: Start, Stop, Reboot buttons -->
+        {% if instance.CLconn != 'N/A' %}
+        <dt>Clientless Admin Connect:</dt>
+        <dd><a href="{{ instance.CLconn }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">Open Connection</a></dd>
+        {% endif %}
     </div>
 </div>
 

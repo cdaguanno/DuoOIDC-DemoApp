@@ -174,9 +174,10 @@ def instance_detail(request, instance_id):
         request,
         'app/instance_detail.html',
         {
-            'title': f'Instance: {instance_id}',
+            'title': f'Instance: {instance_data.get("Name")}',
             'instance': instance_data,
             'region': instance_region,
             'year': datetime.now().year,
         }
     )
+              
