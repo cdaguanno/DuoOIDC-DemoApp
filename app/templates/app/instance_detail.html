@@ -75,8 +75,16 @@
     </div>
     <div class="panel-body">
         {% if instance.CLconn != 'N/A' %}
-        <dt>Clientless Admin Connect:</dt>
-        <dd><a href="{{ instance.CLconn }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">Open Connection</a></dd>
+        <div class="row">
+            <div class="col-md-3">
+                <strong>Clientless Admin Connect:</strong><br>
+                <a href="{{ instance.CLconn }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">Open Connection</a>
+            </div>
+            <div class="col-md-9">
+                <strong>Connection URL:</strong><br>
+                <code>{{ instance.CLconn }}</code>
+            </div>
+        </div>
         {% endif %}
     </div>
 </div>
