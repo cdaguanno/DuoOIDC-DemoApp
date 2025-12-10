@@ -38,6 +38,14 @@
             <dt>Public IP:</dt>
             <dd>{{ instance.PublicIpAddress }}</dd>
 
+            <dt>Public IP:</dt>
+            <dd>
+                <span id="publicIp" style="filter: blur(5px);">{{ instance.PublicIpAddress }}</span>
+                <button type="button" class="btn btn-xs btn-default" onclick="togglePublicIp()">
+                    <span id="toggleIcon" class="glyphicon glyphicon-eye-open"></span>
+                </button>
+            </dd>
+
             <dt>VPC ID:</dt>
             <dd><code>{{ instance.VpcId }}</code></dd>
 
@@ -85,4 +93,25 @@
 <a href="{% url 'home' %}" class="btn btn-default">← Back to Instances</a>
 {% endif %}
 
+
+
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    function togglePublicIp() {
+        var ipElement = document.getElementById('publicIp');
+        var icon = document.getElementById('toggleIcon');
+
+        if (ipElement.style.filter === 'blur(5px)') {
+            ipElement.style.filter = 'none';
+            icon.className = 'glyphicon glyphicon-eye-close';
+        } else {
+            ipElement.style.filter = 'blur(5px)';
+            icon.className = 'glyphicon glyphicon-eye-open';
+        }
+    }
+</script>
 {% endblock %}
