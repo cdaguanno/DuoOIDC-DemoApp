@@ -170,6 +170,10 @@ def instance_detail(request, instance_id):
         if instance_data:
             break
     
+     # Parse LaunchTime string to datetime object
+    if instance_data and instance_data.get('LaunchTime'):
+        instance_data['LaunchTime'] = datetime.fromisoformat(instance_data['LaunchTime'].replace('Z', '+00:00'))
+
     return render(
         request,
         'app/instance_detail.html',
