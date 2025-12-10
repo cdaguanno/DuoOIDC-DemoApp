@@ -39,7 +39,7 @@
             <tbody>
                 {% for instance in region.instances %}
                 <tr>
-                    <td><a href="{% url 'instance_detail' instance.InstanceId %}"><code style="margin: 0; display: inline;">{{ instance.InstanceId }}</code></a></td>
+                    <td><a href="{% url 'instance_detail' instance.InstanceId %}">{{ instance.InstanceId }}</a></td>
                     <td>{{ instance.Name }}</td>
                     <td>{{ instance.InstanceType }}</td>
                     <td>
