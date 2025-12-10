@@ -1,0 +1,62 @@
+{% extends "app/layout.html" %}
+{% block content %}
+
+<h2>{{ title }}</h2>
+
+{% if instance %}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Instance Details</h3>
+    </div>
+    <div class="panel-body">
+        <dl class="dl-horizontal">
+            <dt>Instance ID:</dt>
+            <dd><code>{{ instance.InstanceId }}</code></dd>
+
+            <dt>Name:</dt>
+            <dd>{{ instance.Name }}</dd>
+
+            <dt>Type:</dt>
+            <dd>{{ instance.InstanceType }}</dd>
+
+            <dt>State:</dt>
+            <dd>
+                <span class="label label-{% if instance.State == 'running' %}success{% elif instance.State == 'stopped' %}danger{% else %}warning{% endif %}">
+                    {{ instance.State }}
+                </span>
+            </dd>
+
+            <dt>Region:</dt>
+            <dd>{{ region|upper }}</dd>
+
+            <dt>Availability Zone:</dt>
+            <dd>{{ instance.AvailabilityZone }}</dd>
+
+            {% if instance.CLconn != 'N/A' %}
+            <dt>Admin Connect:</dt>
+            <dd><a href="{{ instance.CLconn }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">Open Connection</a></dd>
+            {% endif %}
+        </dl>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Instance Management</h3>
+    </div>
+    <div class="panel-body">
+        <p>Instance management actions will be added here.</p>
+        <!-- Future: Start, Stop, Reboot buttons -->
+    </div>
+</div>
+
+<a href="{% url 'home' %}" class="btn btn-default">← Back to Instances</a>
+
+{% else %}
+<div class="alert alert-warning">
+    <strong>Instance not found.</strong> The instance ID may be invalid or the instance may have been terminated.
+</div>
+<a href="{% url 'home' %}" class="btn btn-default">← Back to Instances</a>
+{% endif %}
+
+{% endblock %}

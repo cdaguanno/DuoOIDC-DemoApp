@@ -79,6 +79,7 @@
     <Content Include="app\static\app\images\shane.jpg" />
     <Content Include="app\static\app\images\Steve.jpg" />
     <Content Include="app\templates\app\downloads.html" />
+    <Content Include="app\templates\app\instance_detail.html" />
     <Content Include="media\downloads\.gitkeep" />
     <Content Include="media\downloads\AuthProxy-PEM.pem" />
     <Content Include="requirements.txt" />

@@ -8,7 +8,8 @@ def GetInstanceState(arg1):
     
     
     headers = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'x-api-key': 'xfWnTdehiH9MhTrv5ddaQ2TNeiL5NnI1aViRtEMc'
     }
     conn.request("GET", "/prod/instances?region=" + arg1, headers=headers)
     res = conn.getresponse()

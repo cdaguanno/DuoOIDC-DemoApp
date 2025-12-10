@@ -30,6 +30,7 @@ urlpatterns = [
          name='login'),
     path('logout/', LogoutView.as_view(next_page='/'), name='logout'),
     path('admin/', admin.site.urls),
+    path('instance/<str:instance_id>/', views.instance_detail, name='instance_detail'),
 ]
 
 if settings.DEBUG:

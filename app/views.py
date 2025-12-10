@@ -147,4 +147,36 @@ def about(request):
             'contacts': contacts,
             'year':datetime.now().year,
         }
+
+    )
+
+
+def instance_detail(request, instance_id):
+    """Renders the instance detail page with management options."""
+    assert isinstance(request, HttpRequest)
+    
+    # Fetch instance data across all regions to find the specific instance
+    regions_to_check = ['us-east-1', 'us-east-2', 'ca-central-1']
+    instance_data = None
+    instance_region = None
+    
+    for region in regions_to_check:
+        region_data = ec2instance.GetInstanceState(region)
+        for instance in region_data.get('instances', []):
+            if instance.get('InstanceId') == instance_id:
+                instance_data = instance
+                instance_region = region
+                break
+        if instance_data:
+            break
+    
+    return render(
+        request,
+        'app/instance_detail.html',
+        {
+            'title': f'Instance: {instance_id}',
+            'instance': instance_data,
+            'region': instance_region,
+            'year': datetime.now().year,
+        }
     )
