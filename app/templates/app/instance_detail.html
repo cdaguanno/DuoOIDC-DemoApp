@@ -1,5 +1,6 @@
 {% extends "app/layout.html" %}
 {% block content %}
+{% load static %}
 
 <h2>{{ title }}</h2>
 
@@ -84,6 +85,9 @@
                 <strong>Connection URL:</strong><br>
                 <code>{{ instance.CLconn }}</code>
             </div>
+        </div>
+        <div style="margin-top: 20px;">
+            <img src="{% static 'app/images/clientlessimg.JPG' %}" alt="Clientless Access Architecture" style="max-width: 100%; height: auto;">
         </div>
         {% endif %}
     </div>
