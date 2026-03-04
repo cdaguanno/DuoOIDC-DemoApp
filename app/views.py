@@ -4,10 +4,12 @@ Definition of views.
 
 from datetime import datetime
 from django.shortcuts import render
-from django.http import HttpRequest
+from django.http import HttpRequest, JsonResponse
 from app import ec2instance
+from app import ec2powerctrl
 import os
 from django.conf import settings
+import json
 
 def home(request):
     """Renders the home page."""
@@ -184,4 +186,19 @@ def instance_detail(request, instance_id):
             'year': datetime.now().year,
         }
     )
+
+def power_control(request):
+    if request.method == 'POST':
+        body = json.loads(request.body)
+        result = ec2powerctrl.PowerControl(
+            body.get('action'),
+            body.get('instance_id'),
+            body.get('region')
+        )
+        # Parse the API Gateway response envelope to get the actual message
+        parsed = json.loads(result)
+        # Result is already the message string - just parse once
+        message = json.loads(result)
+        return JsonResponse({"message": message})
+    return JsonResponse({"error": "Method not allowed"}, status=405)
               

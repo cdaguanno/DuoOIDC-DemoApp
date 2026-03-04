@@ -90,6 +90,25 @@
             <img src="{% static 'app/images/clientlessimg.JPG' %}" alt="Clientless Access Architecture" style="max-width: 100%; height: auto;">
         </div>
         {% endif %}
+        {% if instance.pwrctrl == 'true' %}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Power Control</h3>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <strong>Instance Power State:</strong><br><br>
+                        <button class="btn btn-sm btn-success" onclick="powerControl('start')">Start Instance</button>
+                        &nbsp;
+                        <button class="btn btn-sm btn-danger" onclick="powerControl('stop')">Stop Instance</button>
+                        <br><br>
+                        <div id="powerStatus" class="alert" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -122,5 +141,37 @@
             icon.className = 'glyphicon glyphicon-eye-open';
         }
     }
+
+    function powerControl(action) {
+        var statusDiv = document.getElementById('powerStatus');
+
+        // Show pending message immediately on click
+        statusDiv.className = 'alert alert-info';
+        statusDiv.innerHTML = 'Request sent — waiting for response...';
+        statusDiv.style.display = 'block';
+
+        fetch("{% url 'power_control' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                action: action,
+                instance_id: '{{ instance.InstanceId }}',
+                region: '{{ region }}'
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                statusDiv.className = 'alert alert-success';
+                statusDiv.innerHTML = data.message;
+            })
+            .catch(error => {
+                statusDiv.className = 'alert alert-danger';
+                statusDiv.innerHTML = 'Error: ' + error;
+            });
+    }
 </script>
+
 {% endblock %}
