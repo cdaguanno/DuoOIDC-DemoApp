@@ -189,16 +189,16 @@ def instance_detail(request, instance_id):
 
 def power_control(request):
     if request.method == 'POST':
-        body = json.loads(request.body)
-        result = ec2powerctrl.PowerControl(
-            body.get('action'),
-            body.get('instance_id'),
-            body.get('region')
-        )
-        # Parse the API Gateway response envelope to get the actual message
-        parsed = json.loads(result)
-        # Result is already the message string - just parse once
-        message = json.loads(result)
-        return JsonResponse({"message": message})
+        try:
+            body = json.loads(request.body)
+            result = ec2powerctrl.PowerControl(
+                body.get('action'),
+                body.get('instance_id'),
+                body.get('region')
+            )
+            message = json.loads(result)
+            return JsonResponse({"message": message})
+        except Exception as e:
+            return JsonResponse({"message": f"Error: {str(e)}"}, status=500)
     return JsonResponse({"error": "Method not allowed"}, status=405)
               

@@ -162,7 +162,12 @@
                 region: '{{ region }}'
             })
         })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok && response.status !== 500) {
+                    throw new Error('Server returned ' + response.status);
+                }
+                return response.json();
+            })
             .then(data => {
                 statusDiv.className = 'alert alert-success';
                 statusDiv.innerHTML = data.message;
