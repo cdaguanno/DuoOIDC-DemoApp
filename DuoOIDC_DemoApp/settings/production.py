@@ -26,6 +26,8 @@ DEBUG = False
 # Example in .env: ALLOWED_HOSTS=192.168.1.100,duooidc.internal.local
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]
+CSRF_TRUSTED_ORIGINS = ['https://765-lab-control-center-cl-8204930.ztna.sse.cisco.io']
+
 
 # Production database configuration - PostgreSQL
 DATABASES = {
