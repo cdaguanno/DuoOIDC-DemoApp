@@ -1,0 +1,759 @@
+{% extends "app/layout.html" %}
+{% block content %}
+
+<h2>Secure Access — Partner Tunnel Portal</h2>
+<p class="text-muted">Self-service provisioning and status for partner/vendor IPsec tunnels.</p>
+
+<hr />
+
+<!-- PANEL 1: Tunnel Status Table (populated in Step 3) -->
+<!-- PANEL 1: Tunnel Status Table -->
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Active Tunnel Groups</h3>
+    </div>
+    <div class="panel-body">
+        {% if tunnels %}
+        <table class="table table-striped table-hover" id="tunnel-status-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Region</th>
+                    <th>Device Type</th>
+                    <th>Routing</th>
+                    <th>CIDRs</th>
+                    <th>Primary Hub</th>
+                    <th>Secondary Hub</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tunnel in tunnels %}
+                <tr>
+                    <td>{{ tunnel.name }}</td>
+                    <td>{{ tunnel.region }}</td>
+                    <td>{{ tunnel.deviceType }}</td>
+                    <td>{{ tunnel.routing.type }}</td>
+                    <td>
+                        {% for cidr in tunnel.routing.data.networkCIDRs %}
+                        <span class="label label-default">{{ cidr }}</span>
+                        {% endfor %}
+                    </td>
+
+                    <!-- Primary Hub -->
+                    <td>
+                        {% for hub in tunnel.hubs %}
+                        {% if hub.isPrimary %}
+                        {{ hub.datacenter.name }}<br>
+                        <small>{{ hub.authId }}</small><br>
+                        {% if hub.status.status == 'UP' %}
+                        <span class="label label-success">UP</span>
+                        {% else %}
+                        <span class="label label-danger">DOWN</span>
+                        {% endif %}
+                        {% endif %}
+                        {% endfor %}
+                    </td>
+
+                    <!-- Secondary Hub -->
+                    <td>
+                        {% for hub in tunnel.hubs %}
+                        {% if not hub.isPrimary %}
+                        {{ hub.datacenter.name }}<br>
+                        <small>{{ hub.authId }}</small><br>
+                        {% if hub.status.status == 'UP' %}
+                        <span class="label label-success">UP</span>
+                        {% else %}
+                        <span class="label label-danger">DOWN</span>
+                        {% endif %}
+                        {% endif %}
+                        {% endfor %}
+                    </td>
+
+                    <!-- Overall Group Status -->
+                    <td>
+                        {% if tunnel.status == 'connected' %}
+                        <span class="label label-success">Connected</span>
+                        {% elif tunnel.status == 'warning' %}
+                        <span class="label label-warning">Warning</span>
+                        {% else %}
+                        <span class="label label-danger">Disconnected</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">No tunnel groups found or API unavailable.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- PANEL 2: Provisioning Form -->
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Provision New Partner Tunnel</h3>
+    </div>
+    <div class="panel-body">
+
+        {% if provision_error %}
+        <div class="alert alert-danger">{{ provision_error }}</div>
+        {% endif %}
+
+        <div class="text-right" style="margin-bottom: 10px;">
+            <button type="button" class="btn btn-default btn-sm" id="fill-test-data-btn">
+                <span class="glyphicon glyphicon-pencil"></span> Fill Test Data
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'tunnel_portal' %}" id="provision-form">
+            {% csrf_token %}
+
+            <!-- SECTION: Partner Contact Info -->
+            <h4>Partner Contact Information</h4>
+            <p class="text-muted">Enter the contact details for the partner or vendor requesting this tunnel.</p>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Partner / Company Name</label>
+                        <input type="text" name="partner_name" class="form-control"
+                               placeholder="e.g. Acme Corp" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Contact Email</label>
+                        <input type="email" name="partner_email" class="form-control"
+                               placeholder="e.g. vpn-admin@acme.com" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Contact Phone</label>
+                        <input type="tel" name="partner_phone" class="form-control"
+                               placeholder="e.g. +1 212 555 0100">
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            <!-- SECTION: Peer Device Info (optional, collapsed) -->
+            <div id="peer-info-panel" class="panel panel-default" style="display:none; margin-bottom:15px;">
+                <div class="panel-heading" style="cursor:pointer;" data-toggle="collapse" data-target="#peer-info-collapse">
+                    <h4 class="panel-title">
+                        <span class="glyphicon glyphicon-chevron-down" id="peer-chevron"></span>
+                        Peer Device Info
+                        <small class="text-muted" style="font-weight:normal; margin-left:8px;">
+                            Optional — fill in to auto-generate CLI config
+                        </small>
+                    </h4>
+                </div>
+                <div id="peer-info-collapse" class="collapse">
+                    <div class="panel-body">
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Outside Interface Name</label>
+                                    <input type="text" name="peer_outside_if" class="form-control"
+                                           placeholder="e.g. outside" value="outside">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Inside Interface Name</label>
+                                    <input type="text" name="peer_inside_if" class="form-control"
+                                           placeholder="e.g. inside" value="inside">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Local Protected Network</label>
+                                    <input type="text" name="peer_local_net" class="form-control"
+                                           placeholder="e.g. 10.0.0.0">
+                                    <p class="help-block">Network address only, no prefix.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Local Subnet Mask</label>
+                                    <input type="text" name="peer_local_mask" class="form-control"
+                                           placeholder="e.g. 255.255.255.0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="peer-asa-fields" style="display:none;">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Crypto Map Name <small class="text-muted">(ASA)</small></label>
+                                        <input type="text" name="peer_crypto_map_name" class="form-control"
+                                               placeholder="e.g. OUTSIDE_MAP" value="OUTSIDE_MAP">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Crypto Map Sequence # <small class="text-muted">(ASA)</small></label>
+                                        <input type="number" name="peer_crypto_map_seq" class="form-control"
+                                               placeholder="e.g. 100" value="100" min="1" max="65535">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="peer-ftd-fields" style="display:none;">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Primary Tunnel Interface # <small class="text-muted">(FTD VTI)</small></label>
+                                        <input type="number" name="peer_tunnel_pri" class="form-control"
+                                               placeholder="e.g. 10" value="10" min="0" max="10000">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Secondary Tunnel Interface # <small class="text-muted">(FTD VTI)</small></label>
+                                        <input type="number" name="peer_tunnel_sec" class="form-control"
+                                               placeholder="e.g. 11" value="11" min="0" max="10000">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- end panel-body -->
+                </div><!-- end peer-info-collapse -->
+            </div><!-- end peer-info-panel -->
+
+            <!-- SECTION: Tunnel Configuration -->
+            <h4>Tunnel Configuration</h4>
+            <p class="text-muted">Configure the IPsec tunnel parameters for this partner connection.</p>
+            <div class="row">
+                <div class="col-md-6">
+
+                    <!-- Tunnel Name -->
+                    <div class="form-group">
+                        <label>Tunnel Group Name</label>
+                        <input type="text" name="tunnel_name" class="form-control"
+                               placeholder="e.g. AcmeCorp-Tunnel" required maxlength="50">
+                        <p class="help-block">1–50 chars. Letters, numbers, spaces and hyphens only.</p>
+                    </div>
+
+                    <!-- Device Type -->
+                    <div class="form-group">
+                        <label>
+                            Device Type
+                            <a href="#" data-toggle="popover" data-trigger="focus"
+                               title="Device Type Guide"
+                               data-content="ASA/FTD/ISR: Standard Cisco IKEv2 devices. Meraki MX: Meraki Auto-VPN platform. Viptela cEdge/vEdge: Cisco SD-WAN platforms. AWS S2S VPN: Amazon Web Services tunnel. AZURE S2S VPN: Microsoft Azure tunnel. Other: Any generic IKEv2 peer."
+                               data-placement="right" tabindex="0">
+                                <span class="glyphicon glyphicon-info-sign text-info"></span>
+                            </a>
+                        </label>
+                        <select name="device_type" class="form-control" required>
+                            <option value="">-- Select Device Type --</option>
+                            {% for dt in device_types %}
+                            <option value="{{ dt }}">{{ dt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Auth ID Prefix -->
+                    <div class="form-group">
+                        <label>Auth ID Prefix</label>
+                        <input type="text" name="auth_id_prefix" class="form-control"
+                               placeholder="e.g. acmecorp" required>
+                        <p class="help-block">Used as the IKE identity prefix. Lowercase, no spaces or special characters.</p>
+                    </div>
+
+                    <!-- PSK -->
+                    <div class="form-group">
+                        <label>
+                            Pre-Shared Key (PSK)
+                            <a href="#" data-toggle="popover" data-trigger="focus"
+                               title="Pre-Shared Key"
+                               data-content="The PSK is a shared secret used to authenticate both ends of the IPsec tunnel. Choose a strong key and keep it secure — you will need to provide this to your network team to configure the peer device. It will be displayed once after provisioning."
+                               data-placement="right" tabindex="0">
+                                <span class="glyphicon glyphicon-info-sign text-info"></span>
+                            </a>
+                        </label>
+                        <input type="text" name="passphrase" class="form-control"
+                               placeholder="e.g. MySecureKey2026Abc"
+                               pattern="[a-zA-Z0-9]{16,}"
+                               title="16 or more characters, letters and numbers only. No special characters."
+                               required>
+                        <p class="help-block">
+                            Create a PSK of your choosing and keep it for your records.
+                            16+ characters, letters and numbers only — no special characters.
+                            It will be displayed once after provisioning.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <!-- Region -->
+                    <div class="form-group">
+                        <label>
+                            Secure Access Region
+                            <a href="#" data-toggle="popover" data-trigger="focus"
+                               title="Region Selection"
+                               data-content="Select the Cisco Secure Access PoP (Point of Presence) closest to the partner's location. This minimizes tunnel latency and optimizes performance."
+                               data-placement="left" tabindex="0">
+                                <span class="glyphicon glyphicon-info-sign text-info"></span>
+                            </a>
+                        </label>
+                        <select name="region" class="form-control" required>
+                            <option value="">-- Select Region --</option>
+                            {% regroup regions by continent as continent_list %}
+                            {% for continent in continent_list %}
+                            <optgroup label="{{ continent.grouper }}">
+                                {% for r in continent.list %}
+                                <option value="{{ r.region }}">
+                                    {{ r.name }} — {{ r.description }}
+                                </option>
+                                {% endfor %}
+                            </optgroup>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Routing Type -->
+                    <div class="form-group">
+                        <label>
+                            Routing Type
+                            <a href="#" data-toggle="popover" data-trigger="focus"
+                               title="Routing Type Guide"
+                               data-content="Static: Partner has fixed subnets — you define the CIDRs. BGP: Dynamic routing — partner exchanges routes automatically via BGP. NAT: Use when partner IP space overlaps with your network — Secure Access applies address translation."
+                               data-placement="left" tabindex="0">
+                                <span class="glyphicon glyphicon-info-sign text-info"></span>
+                            </a>
+                        </label>
+                        <select name="routing_type" class="form-control" id="routing-type-select" required>
+                            <option value="static">Static Routing</option>
+                            <option value="bgp">BGP (Dynamic Routing)</option>
+                            <option value="nat">NAT (Overlapping IP Space)</option>
+                        </select>
+                    </div>
+
+                    <!-- CIDRs — shown for Static only -->
+                    <div class="form-group" id="cidrs-group">
+                        <label>Partner Source Networks (CIDRs)</label>
+                        <input type="text" name="cidrs" id="cidrs-input" class="form-control"
+                               placeholder="e.g. 10.1.0.0/24, 192.168.10.0/24">
+                        <p class="help-block">Comma-separated CIDR ranges the partner will source traffic from.</p>
+                    </div>
+
+                    <!-- BGP AS Number — shown for BGP only -->
+                    <div class="form-group" id="bgp-group" style="display:none;">
+                        <label>BGP AS Number</label>
+                        <input type="text" name="bgp_as_number" id="bgp-as-input" class="form-control"
+                               placeholder="e.g. 65001">
+                        <p class="help-block">Partner's BGP Autonomous System number (0–65536).</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="provision-btn">
+                Provision Tunnel
+            </button>
+
+        </form>
+    </div>
+</div>
+
+<!-- PANEL 3: Peering Config Result -->
+{% if provision_result %}
+<div class="panel panel-success">
+    <div class="panel-heading">
+        <h3 class="panel-title">✓ Tunnel Provisioned — Peering Configuration</h3>
+    </div>
+    <div class="panel-body">
+        <div class="alert alert-warning">
+            <strong>Copy this information now.</strong>
+            The PSK is only shown once and cannot be retrieved after leaving this page.
+        </div>
+        <table class="table table-bordered">
+            <tr><th>Partner / Company</th><td>{{ provision_result.partner_name }}</td></tr>
+            <tr><th>Contact Email</th><td>{{ provision_result.partner_email }}</td></tr>
+            {% if provision_result.partner_phone %}
+            <tr><th>Contact Phone</th><td>{{ provision_result.partner_phone }}</td></tr>
+            {% endif %}
+            <tr><td colspan="2"></td></tr>
+            <tr><th>Tunnel Group Name</th><td>{{ provision_result.name }}</td></tr>
+            <tr><th>Region</th><td>{{ provision_result.region }}</td></tr>
+            <tr><th>Device Type</th><td>{{ provision_result.deviceType }}</td></tr>
+            <tr>
+                <th>Primary Hub AuthID</th>
+                <td>
+                    {% for hub in provision_result.hubs %}
+                    {% if hub.isPrimary %}
+                    {{ hub.authId }}<br>
+                    <small>IP: {{ hub.datacenter.ip }}</small>
+                    {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>Secondary Hub AuthID</th>
+                <td>
+                    {% for hub in provision_result.hubs %}
+                    {% if not hub.isPrimary %}
+                    {{ hub.authId }}<br>
+                    <small>IP: {{ hub.datacenter.ip }}</small>
+                    {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr><th>Routing Type</th><td>{{ provision_result.routing.type }}</td></tr>
+            {% if provision_result.routing.data.networkCIDRs %}
+            <tr>
+                <th>Advertised CIDRs</th>
+                <td>
+                    {% for cidr in provision_result.routing.data.networkCIDRs %}
+                    <span class="label label-default">{{ cidr }}</span>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endif %}
+            {% if provision_result.routing.data.asNumber %}
+            <tr><th>BGP AS Number</th><td>{{ provision_result.routing.data.asNumber }}</td></tr>
+            {% endif %}
+            <tr class="warning">
+                <th>Pre-Shared Key</th>
+                <td><code>{{ provision_result.psk }}</code></td>
+            </tr>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- PANEL 4: CLI Config Reference -->
+{% if provision_result %}
+{% if provision_result.deviceType == 'ASA' or provision_result.deviceType == 'FTD' %}
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">
+            <span class="glyphicon glyphicon-console"></span>
+            Peer Device Configuration Reference — {{ provision_result.deviceType }}
+        </h3>
+    </div>
+    <div class="panel-body">
+        <p class="text-muted">
+            Reference CLI for the peer device. Adjust interface names, sequence numbers,
+            and local subnets to match your environment before applying.
+        </p>
+
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" {% if provision_result.deviceType == 'ASA' %} class="active" {% endif %}>
+                <a href="#tab-cryptomap" role="tab" data-toggle="tab">
+                    <span class="glyphicon glyphicon-lock"></span> Crypto Map (Policy-Based)
+                </a>
+            </li>
+            <li role="presentation" {% if provision_result.deviceType == 'FTD' %} class="active" {% endif %}>
+                <a href="#tab-vti" role="tab" data-toggle="tab">
+                    <span class="glyphicon glyphicon-transfer"></span> VTI (Route-Based)
+                </a>
+            </li>
+        </ul>
+
+        <div class="tab-content" style="margin-top:15px;">
+
+            <!-- TAB 1: Crypto Map — ASA preferred -->
+            <div role="tabpanel" class="tab-pane{% if provision_result.deviceType == 'ASA' %} active{% endif %}" id="tab-cryptomap">
+                <div class="text-right" style="margin-bottom:5px;">
+                    <button class="btn btn-default btn-xs" onclick="copyConfig('pre-cryptomap')">
+                        <span class="glyphicon glyphicon-copy"></span> Copy
+                    </button>
+                </div>
+                <pre id="pre-cryptomap" style="font-size:12px; max-height:480px; overflow-y:auto;">
+! ================================================================
+! Cisco ASA — IKEv2 Crypto Map to Cisco Secure Access
+! Tunnel Group : {{ provision_result.name }}
+! Region       : {{ provision_result.region }}
+! ================================================================
+!
+! --- Step 1: IKEv2 Policy ---
+crypto ikev2 policy 10
+ encryption aes-256
+ integrity sha256
+ group 14
+ prf sha256
+ lifetime seconds 86400
+!
+crypto ikev2 enable {{ provision_result.peer_outside_if }}
+!
+! --- Step 2: IPsec Proposal ---
+crypto ipsec ikev2 ipsec-proposal SECURE-ACCESS-PROPOSAL
+ protocol esp encryption aes-256
+ protocol esp integrity sha-256
+!
+! --- Step 3: Tunnel Groups ---
+tunnel-group {{ provision_result.primary_hub.authId }} type ipsec-l2l
+tunnel-group {{ provision_result.primary_hub.authId }} ipsec-attributes
+ ikev2 remote-authentication pre-shared-key {{ provision_result.psk }}
+ ikev2 local-authentication pre-shared-key {{ provision_result.psk }}
+!
+tunnel-group {{ provision_result.secondary_hub.authId }} type ipsec-l2l
+tunnel-group {{ provision_result.secondary_hub.authId }} ipsec-attributes
+ ikev2 remote-authentication pre-shared-key {{ provision_result.psk }}
+ ikev2 local-authentication pre-shared-key {{ provision_result.psk }}
+!
+! --- Step 4: Interesting Traffic ACL ---
+! One line per remote network. Convert CIDR prefix to subnet mask.
+{% if provision_result.routing.type == 'static' %}{% for r in provision_result.cidr_routes %}! Remote: {{ r.cidr }}
+access-list ACL-{{ provision_result.name }} extended permit ip {{ provision_result.peer_local_net }} {{ provision_result.peer_local_mask }} {{ r.network }} {{ r.mask }}
+{% endfor %}{% elif provision_result.routing.type == 'nat' %}! NAT mode — no interesting traffic ACL required.
+! All outbound traffic from &lt;LOCAL-NET&gt; will be forwarded through the tunnel.
+access-list ACL-{{ provision_result.name }} extended permit ip {{ provision_result.peer_local_net }} {{ provision_result.peer_local_mask }} any4
+{% elif provision_result.routing.type == 'bgp' %}! BGP mode — ACL permits all traffic; routes learned dynamically.
+access-list ACL-{{ provision_result.name }} extended permit ip {{ provision_result.peer_local_net }} {{ provision_result.peer_local_mask }} any4
+{% endif %}!
+! --- Step 5: Crypto Map ---
+crypto map {{ provision_result.peer_crypto_map_name }} {{ provision_result.peer_crypto_map_seq }} match address ACL-{{ provision_result.name }}
+crypto map {{ provision_result.peer_crypto_map_name }} {{ provision_result.peer_crypto_map_seq }} set peer {{ provision_result.primary_hub.datacenter.ip }} {{ provision_result.secondary_hub.datacenter.ip }}
+crypto map {{ provision_result.peer_crypto_map_name }} {{ provision_result.peer_crypto_map_seq }} set ikev2 ipsec-proposal SECURE-ACCESS-PROPOSAL
+crypto map {{ provision_result.peer_crypto_map_name }} {{ provision_result.peer_crypto_map_seq }} set pfs group14
+crypto map {{ provision_result.peer_crypto_map_name }} {{ provision_result.peer_crypto_map_seq }} set security-association lifetime seconds 3600
+crypto map {{ provision_result.peer_crypto_map_name }} interface {{ provision_result.peer_outside_if }}
+!
+! --- Step 6: NAT Exemption ---
+! Create network objects for local and remote networks first.
+! object network OBJ-LOCAL-{{ provision_result.name }}
+!  subnet {{ provision_result.peer_local_net }} {{ provision_result.peer_local_mask }}
+nat ({{ provision_result.peer_inside_if }},{{ provision_result.peer_outside_if }}) source static OBJ-LOCAL-{{ provision_result.name }} OBJ-LOCAL-{{ provision_result.name }} destination static OBJ-REMOTE-{{ provision_result.name }} OBJ-REMOTE-{{ provision_result.name }} no-proxy-arp route-lookup
+</pre>
+            </div>
+
+            <!-- TAB 2: VTI Route-Based — FTD preferred -->
+            <div role="tabpanel" class="tab-pane{% if provision_result.deviceType == 'FTD' %} active{% endif %}" id="tab-vti">
+                <div class="text-right" style="margin-bottom:5px;">
+                    <button class="btn btn-default btn-xs" onclick="copyConfig('pre-vti')">
+                        <span class="glyphicon glyphicon-copy"></span> Copy
+                    </button>
+                </div>
+                <pre id="pre-vti" style="font-size:12px; max-height:480px; overflow-y:auto;">
+! ================================================================
+! Cisco FTD — IKEv2 VTI (Route-Based) to Cisco Secure Access
+! Tunnel Group : {{ provision_result.name }}
+! Region       : {{ provision_result.region }}
+! Note: If managed by FMC/cdFMC, configure via FMC UI or REST API.
+! ================================================================
+! Tunnel10/11 — adjust interface numbers to avoid conflicts
+!
+! --- Step 1: IKEv2 Policy ---
+crypto ikev2 policy 10
+ encryption aes-256
+ integrity sha256
+ group 14
+ prf sha256
+ lifetime seconds 86400
+!
+crypto ikev2 enable {{ provision_result.peer_outside_if }}
+!
+! --- Step 2: IPsec Proposal + Profile ---
+crypto ipsec ikev2 ipsec-proposal SECURE-ACCESS-PROPOSAL
+ protocol esp encryption aes-256
+ protocol esp integrity sha-256
+!
+crypto ipsec profile SECURE-ACCESS-PROFILE
+ set ikev2 ipsec-proposal SECURE-ACCESS-PROPOSAL
+ set pfs group14
+ set security-association lifetime seconds 3600
+!
+! --- Step 3: Tunnel Groups ---
+tunnel-group {{ provision_result.primary_hub.authId }} type ipsec-l2l
+tunnel-group {{ provision_result.primary_hub.authId }} ipsec-attributes
+ ikev2 remote-authentication pre-shared-key {{ provision_result.psk }}
+ ikev2 local-authentication pre-shared-key {{ provision_result.psk }}
+!
+tunnel-group {{ provision_result.secondary_hub.authId }} type ipsec-l2l
+tunnel-group {{ provision_result.secondary_hub.authId }} ipsec-attributes
+ ikev2 remote-authentication pre-shared-key {{ provision_result.psk }}
+ ikev2 local-authentication pre-shared-key {{ provision_result.psk }}
+!
+! --- Step 4: Virtual Tunnel Interfaces ---
+interface Tunnel{{ provision_result.peer_tunnel_pri }}
+ nameif SA-{{ provision_result.name }}-PRI
+ ip address 169.254.100.1 255.255.255.252
+ tunnel source interface {{ provision_result.peer_outside_if }}
+ tunnel destination {{ provision_result.primary_hub.datacenter.ip }}
+ tunnel mode ipsec ipv4
+ tunnel protection ipsec profile SECURE-ACCESS-PROFILE
+ no shutdown
+!
+interface Tunnel{{ provision_result.peer_tunnel_sec }}
+ nameif SA-{{ provision_result.name }}-SEC
+ ip address 169.254.100.5 255.255.255.252
+ tunnel source interface {{ provision_result.peer_outside_if }}
+ tunnel destination {{ provision_result.secondary_hub.datacenter.ip }}
+ tunnel mode ipsec ipv4
+ tunnel protection ipsec profile SECURE-ACCESS-PROFILE
+ no shutdown
+!
+! --- Step 5: Routing ---
+{% if provision_result.routing.type == 'static' %}! Static routes — primary preferred (metric 1), secondary backup (metric 254)
+! Convert each CIDR to network + mask format for the route command.
+{% for r in provision_result.cidr_routes %}! {{ r.cidr }}
+route SA-{{ provision_result.name }}-PRI {{ r.network }} {{ r.mask }} 169.254.100.2 1
+route SA-{{ provision_result.name }}-SEC {{ r.network }} {{ r.mask }} 169.254.100.6 254
+{% endfor %}{% elif provision_result.routing.type == 'bgp' %}! BGP Dynamic Routing — AS {{ provision_result.routing.data.asNumber }}
+router bgp &lt;YOUR-AS-NUMBER&gt;
+ bgp log-neighbor-changes
+ address-family ipv4 unicast
+  neighbor 169.254.100.2 remote-as {{ provision_result.routing.data.asNumber }}
+  neighbor 169.254.100.2 activate
+  neighbor 169.254.100.6 remote-as {{ provision_result.routing.data.asNumber }}
+  neighbor 169.254.100.6 activate
+  no auto-summary
+  no synchronization
+ exit-address-family
+{% elif provision_result.routing.type == 'nat' %}! NAT mode — default route or PBR sends traffic into tunnel.
+! No specific host routes required; Secure Access handles translation.
+route SA-{{ provision_result.name }}-PRI 0.0.0.0 0.0.0.0 169.254.100.2 1
+route SA-{{ provision_result.name }}-SEC 0.0.0.0 0.0.0.0 169.254.100.6 254
+{% endif %}!
+! --- Step 6: NAT Exemption (if NAT is active on this FTD) ---
+! Exempt VPN traffic from interface PAT/NAT rules.
+! Configure via FMC: Policies > NAT > Add NAT exemption, or via CLI:
+! nat ({{ provision_result.peer_inside_if }},SA-{{ provision_result.name }}-PRI) source static {{ provision_result.peer_local_net }} {{ provision_result.peer_local_net }} no-proxy-arp
+</pre>
+            </div>
+
+        </div><!-- end tab-content -->
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Enable Bootstrap popovers
+    $(function () {
+        $('[data-toggle="popover"]').popover();
+    });
+
+    // Show/hide CIDRs and BGP AS fields based on routing type
+    $('#routing-type-select').on('change', function () {
+        var val = $(this).val();
+        if (val === 'static') {
+            $('#cidrs-group').show();
+            $('#cidrs-input').prop('required', true);
+            $('#bgp-group').hide();
+            $('#bgp-as-input').prop('required', false);
+        } else if (val === 'bgp') {
+            $('#cidrs-group').hide();
+            $('#cidrs-input').prop('required', false);
+            $('#bgp-group').show();
+            $('#bgp-as-input').prop('required', true);
+        } else {
+            // NAT — neither field needed
+            $('#cidrs-group').hide();
+            $('#cidrs-input').prop('required', false);
+            $('#bgp-group').hide();
+            $('#bgp-as-input').prop('required', false);
+        }
+    });
+
+    // Spinner on form submit
+    $('#provision-form').on('submit', function () {
+        var btn = $('#provision-btn');
+        btn.prop('disabled', true);
+        btn.html('<span class="glyphicon glyphicon-refresh spinning"></span> Provisioning...');
+    });
+
+    $('#fill-test-data-btn').on('click', function () {
+
+        // Build next tunnel name by checking existing names in the status table
+        var baseName = 'TestPortal-Tunnel-';
+        var maxNum = 0;
+        $('#tunnel-status-table tbody tr').each(function () {
+            var name = $(this).find('td:first').text().trim();
+            if (name.startsWith(baseName)) {
+                var suffix = name.slice(baseName.length);
+                var num = parseInt(suffix, 10);
+                if (!isNaN(num) && num > maxNum) maxNum = num;
+            }
+        });
+        var nextNum = String(maxNum + 1).padStart(2, '0');
+
+        // Partner contact — use placeholder values
+        $('[name="partner_name"]').val('Acme Corp');
+        $('[name="partner_email"]').val('vpn-admin@acme.com');
+        $('[name="partner_phone"]').val('+1 212 555 0100');
+
+        // Tunnel config
+        $('[name="tunnel_name"]').val(baseName + nextNum);
+        $('[name="device_type"]').val('FTD').trigger('change');
+        $('[name="auth_id_prefix"]').val('acmecorp');
+        $('[name="passphrase"]').val('MySecureKey2026Abc');
+        $('[name="region"]').val('us-east-1');
+        $('[name="routing_type"]').val('static').trigger('change');
+        $('[name="cidrs"]').val('10.1.0.0/24, 192.168.10.0/24');
+    });
+
+    function copyConfig(preId) {
+        var text = document.getElementById(preId).innerText;
+        navigator.clipboard.writeText(text).then(function () {
+            alert('Config copied to clipboard.');
+        });
+    }
+
+    // Device type — show/hide peer info panel and correct sub-fields
+    $('[name="device_type"]').on('change', function () {
+        var dt = $(this).val();
+        if (dt === 'ASA' || dt === 'FTD') {
+            $('#peer-info-panel').show();
+            $('#peer-info-collapse').collapse('show');
+        } else {
+            $('#peer-info-panel').hide();
+            $('#peer-info-collapse').collapse('hide');
+        }
+        if (dt === 'ASA') {
+            $('#peer-asa-fields').show();
+            $('#peer-ftd-fields').hide();
+        } else if (dt === 'FTD') {
+            $('#peer-ftd-fields').show();
+            $('#peer-asa-fields').hide();
+        } else {
+            $('#peer-asa-fields').hide();
+            $('#peer-ftd-fields').hide();
+        }
+    });
+
+    $('#peer-info-collapse').on('show.bs.collapse', function () {
+        $('#peer-chevron').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+    }).on('hide.bs.collapse', function () {
+        $('#peer-chevron').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+    });
+</script>
+
+<style>
+    /* Spinner animation for the glyphicon */
+    .spinning {
+        animation: spin 1s linear infinite;
+        display: inline-block;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+
+{% endblock %}

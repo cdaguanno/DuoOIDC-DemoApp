@@ -32,6 +32,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('instance/<str:instance_id>/', views.instance_detail, name='instance_detail'),
     path('power-control/', views.power_control, name='power_control'),
+    path('tunnels/', views.tunnel_portal, name='tunnel_portal'),
 ]
 
 if settings.DEBUG:

@@ -7,9 +7,11 @@ from django.shortcuts import render
 from django.http import HttpRequest, JsonResponse
 from app import ec2instance
 from app import ec2powerctrl
+from app import secure_access
 import os
 from django.conf import settings
 import json
+import ipaddress
 
 def home(request):
     """Renders the home page."""
@@ -201,4 +203,97 @@ def power_control(request):
         except Exception as e:
             return JsonResponse({"message": f"Error: {str(e)}"}, status=500)
     return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+def tunnel_portal(request):
+    """
+    GET:  Renders portal with live tunnel list + provisioning form.
+    POST: Handles new tunnel group provisioning, returns peering config.
+    """
+    provision_result = None
+    provision_error = None
+
+    if request.method == 'POST':
+        # Partner contact info — display only, not sent to API
+        partner_name    = request.POST.get('partner_name', '').strip()
+        partner_email   = request.POST.get('partner_email', '').strip()
+        partner_phone   = request.POST.get('partner_phone', '').strip()
+
+        # Tunnel config fields
+        name            = request.POST.get('tunnel_name', '').strip()
+        region          = request.POST.get('region', '')
+        device_type     = request.POST.get('device_type', '')
+        routing         = request.POST.get('routing_type', 'static')
+        cidrs_raw       = request.POST.get('cidrs', '')
+        cidrs           = [c.strip() for c in cidrs_raw.split(',') if c.strip()]
+        auth_id_prefix  = request.POST.get('auth_id_prefix', '').strip()
+        passphrase      = request.POST.get('passphrase', '').strip()
+        bgp_as_number   = request.POST.get('bgp_as_number', '').strip()
+
+        result = secure_access.create_tunnel_group(
+            name, region, device_type, routing, cidrs,
+            auth_id_prefix, passphrase, bgp_as_number
+        )
+
+        if result:
+            provision_result = result
+            provision_result['psk'] = passphrase       # API doesn't return PSK
+            # Extract hubs for easy template access
+            for hub in provision_result.get('hubs', []):
+                if hub.get('isPrimary'):
+                    provision_result['primary_hub'] = hub
+                else:
+                    provision_result['secondary_hub'] = hub
+
+            provision_result['partner_name']  = partner_name
+            provision_result['partner_email'] = partner_email
+            provision_result['partner_phone'] = partner_phone
+            # Peer device info — used to render CLI config
+            provision_result['peer_outside_if']      = request.POST.get('peer_outside_if', 'outside').strip() or 'outside'
+            provision_result['peer_inside_if']        = request.POST.get('peer_inside_if', 'inside').strip() or 'inside'
+            provision_result['peer_local_net']        = request.POST.get('peer_local_net', '<LOCAL-NET>').strip() or '<LOCAL-NET>'
+            provision_result['peer_local_mask']       = request.POST.get('peer_local_mask', '<LOCAL-MASK>').strip() or '<LOCAL-MASK>'
+            provision_result['peer_crypto_map_name']  = request.POST.get('peer_crypto_map_name', 'OUTSIDE_MAP').strip() or 'OUTSIDE_MAP'
+            provision_result['peer_crypto_map_seq']   = request.POST.get('peer_crypto_map_seq', '100').strip() or '100'
+            provision_result['peer_tunnel_pri']       = request.POST.get('peer_tunnel_pri', '10').strip() or '10'
+            provision_result['peer_tunnel_sec']       = request.POST.get('peer_tunnel_sec', '11').strip() or '11'
+
+            # Convert CIDRs to network + mask pairs for CLI template
+            cidr_routes = []
+            for cidr in provision_result.get('routing', {}).get('data', {}).get('networkCIDRs', []):
+                net = ipaddress.IPv4Network(cidr, strict=False)
+                cidr_routes.append({
+                    'cidr': cidr,
+                    'network': str(net.network_address),
+                    'mask': str(net.netmask),
+                })
+            provision_result['cidr_routes'] = cidr_routes
+        else:
+            provision_error = result if isinstance(result, str) else 'Tunnel creation failed. Check inputs and try again.'
+
+
+
+    # Always reload live tunnel list (reflects newly created tunnel on POST success)
+    tunnels = secure_access.get_tunnel_groups()
+    #regions = secure_access.get_regions()
+    regions = sorted(secure_access.get_regions(), key=lambda r: r['continent'])
+        
+    return render(
+        request,
+        'app/tunnel_portal.html',
+        {
+            'title': 'Tunnel Portal',
+            'year': datetime.now().year,
+            'tunnels': tunnels,
+            'regions': regions,
+            'provision_result': provision_result,
+            'provision_error': provision_error,
+            # Device types are a fixed API enum — no need to fetch
+            'device_types': [
+                'ASA', 'FTD', 'ISR', 'Meraki MX',
+                'Viptela cEdge', 'Viptela vEdge',
+                'AWS S2S VPN', 'AZURE S2S VPN', 'other'
+            ],
+        }
+    )
               

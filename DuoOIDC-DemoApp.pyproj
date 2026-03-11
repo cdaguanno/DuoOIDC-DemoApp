@@ -38,6 +38,9 @@
     <Compile Include="app\forms.py" />
     <Compile Include="app\models.py" />
     <Compile Include="app\ec2powerctrl.py" />
+    <Compile Include="app\secure_access.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="app\tests.py" />
     <Compile Include="app\views.py" />
     <Compile Include="app\__init__.py" />
@@ -81,6 +84,7 @@
     <Content Include="app\static\app\images\Steve.jpg" />
     <Content Include="app\templates\app\downloads.html" />
     <Content Include="app\templates\app\instance_detail.html" />
+    <Content Include="app\templates\app\tunnel_portal.html" />
     <Content Include="media\downloads\.gitkeep" />
     <Content Include="media\downloads\AuthProxy-PEM.pem" />
     <Content Include="requirements.txt" />
